@@ -34,7 +34,7 @@ def plot_confusion_matrix(ax: plt.Axes, cnf_matrix: np.ndarray, classes_names: l
 
 ##Accuracy##
 def accuracy(data, trainSize, className, estimator):
-    trnX, tstX, trnY, tstY, labels = trainSplitTest(data, trainSize, className)
+    trnX, tstX, trnY, tstY = trainSplitTest(data, trainSize, className)
     clf = estimator
     clf.fit(trnX, trnY)
     clf.score(tstX, tstY)
@@ -42,7 +42,7 @@ def accuracy(data, trainSize, className, estimator):
 
 ##Confusion Matrix##
 def confusionMatrix(data, trainSize, className, estimatorName):
-    trnX, tstX, trnY, tstY, labels = trainSplitTest(data, trainSize, className)
+    trnX, tstX, trnY, tstY, labels = trainSplitTestLabel(data, trainSize, className)
     clf = estimatorName
     clf.fit(trnX, trnY)
     prdY = clf.predict(tstX)

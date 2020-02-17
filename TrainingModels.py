@@ -4,7 +4,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
+import pydot
 from sklearn.tree import export_graphviz
+from sklearn.tree import DecisionTreeClassifier
+from subprocess import call
+from subprocess import check_call
 
 from functions import *
 
@@ -108,18 +112,16 @@ def decisionTrees(data, trainSize, className):
 
 
 ##TreePNG##
+##Tree PNG##
 def treePNG(data, trainSize, maxDepth, className):
     tree = DecisionTreeClassifier(max_depth=maxDepth)
     trnX, tstX, trnY, tstY = trainSplitTest(data,trainSize,className)
     tree.fit(trnX, trnY)
     dot_data = export_graphviz(tree, out_file='dtree.dot', filled=True, rounded=True, special_characters=True)
-    # Convert to png
-    from subprocess import call
-    call(['dot', '-Tpng', 'dtree.dot', '-o', 'dtree.png', '-Gdpi=600'])
-
     plt.figure(figsize=(14, 18))
-    plt.imshow(plt.imread('dtree.png'))
     plt.axis('off')
+    (graph,) = pydot.graph_from_dot_file('dtree.dot')
+    graph.write_png('structure2.png')
     plt.show()
 
 
