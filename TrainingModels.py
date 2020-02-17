@@ -1,13 +1,10 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from pip._vendor.webencodings import labels
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-import sklearn.metrics as metrics
-from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
+from sklearn.naive_bayes import GaussianNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import export_graphviz
 
 from functions import *
 
@@ -19,7 +16,7 @@ from functions import *
 ##sample hold-out: used in the presence of millions of records.
 
 
-def trainSplitTest(data, trainSize, className):
+def trainSplitTestLabel(data, trainSize, className):
     y: np.ndarray = data.pop(className).values
     X: np.ndarray = data.values
     labels: np.ndarray = pd.unique(y)
@@ -27,9 +24,16 @@ def trainSplitTest(data, trainSize, className):
     return trnX, tstX, trnY, tstY, labels
 
 
+def trainSplitTest(data, trainSize, className):
+    y: np.ndarray = data.pop(className).values
+    X: np.ndarray = data.values
+    trnX, tstX, trnY, tstY = train_test_split(X, y, train_size=trainSize, stratify=y)
+    return trnX, tstX, trnY, tstY
+
+
 ##Naive Bayes##
 def naiveBayes(data, trainSize, className, estimator):
-    trnX, tstX, trnY, tstY, labels = trainSplitTest(data, trainSize, className)
+    trnX, tstX, trnY, tstY, labels = trainSplitTestLabel(data, trainSize, className)
     clf = estimator
     clf.fit(trnX, trnY)
     prdY = clf.predict(tstX)
@@ -42,7 +46,7 @@ def naiveBayes(data, trainSize, className, estimator):
 ##Naive Bayes estimators comparison##
 def naiveBayesComparator(data, trainSize, className):
     estimators = {'GaussianNB': GaussianNB(), 'BernoulyNB': BernoulliNB()}  ##'MultinomialNB': MultinomialNB()
-    trnX, tstX, trnY, tstY, labels = trainSplitTest(data, trainSize, className)
+    trnX, tstX, trnY, tstY = trainSplitTest(data, trainSize, className)
     xvalues = []
     yvalues = []
     for clf in estimators:
@@ -58,7 +62,7 @@ def naiveBayesComparator(data, trainSize, className):
 
 ##KNN##
 def kNNComparator(data, trainSize, className):
-    trnX, tstX, trnY, tstY, labels = trainSplitTest(data, trainSize, className)
+    trnX, tstX, trnY, tstY = trainSplitTest(data, trainSize, className)
     nvalues = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
     dist = ['manhattan', 'euclidean', 'chebyshev']
     values = {}
@@ -81,7 +85,7 @@ def decisionTrees(data, trainSize, className):
     min_samples_leaf = [.05, .025, .01, .0075, .005, .0025, .001]
     max_depths = [5, 10, 25, 50]
     criteria = ['entropy', 'gini']
-    trnX, tstX, trnY, tstY, labels = trainSplitTest(data, trainSize, className)
+    trnX, tstX, trnY, tstY = trainSplitTest(data, trainSize, className)
     plt.figure()
     fig, axs = plt.subplots(1, 2, figsize=(16, 4), squeeze=False)
     for k in range(len(criteria)):
@@ -93,7 +97,8 @@ def decisionTrees(data, trainSize, className):
                 tree = DecisionTreeClassifier(min_samples_leaf=n, max_depth=d, criterion=f)
                 tree.fit(trnX, trnY)
                 prdY = tree.predict(tstX)
-                print("Model accuracy " + "%.3f"%d + "(" + "%.3f" % n + "): " + "%.3f" % metrics.accuracy_score(tstY, prdY))
+                print("Model accuracy " + "%.3f" % d + "(" + "%.3f" % n + "): " + "%.3f" % metrics.accuracy_score(tstY,
+                                                                                                                  prdY))
                 yvalues.append(metrics.accuracy_score(tstY, prdY))
             values[d] = yvalues
         multiple_line_chart(axs[0, k], min_samples_leaf, values, 'Decision Trees with %s criteria' % f,
@@ -102,12 +107,28 @@ def decisionTrees(data, trainSize, className):
     plt.show()
 
 
+##TreePNG##
+def treePNG(data, trainSize, maxDepth, className):
+    tree = DecisionTreeClassifier(max_depth=maxDepth)
+    trnX, tstX, trnY, tstY = trainSplitTest(data,trainSize,className)
+    tree.fit(trnX, trnY)
+    dot_data = export_graphviz(tree, out_file='dtree.dot', filled=True, rounded=True, special_characters=True)
+    # Convert to png
+    from subprocess import call
+    call(['dot', '-Tpng', 'dtree.dot', '-o', 'dtree.png', '-Gdpi=600'])
+
+    plt.figure(figsize=(14, 18))
+    plt.imshow(plt.imread('dtree.png'))
+    plt.axis('off')
+    plt.show()
+
+
 ##Random forests##
 def randomForests(data, trainSize, className):
     n_estimators = [5, 10, 25, 50, 75, 100, 150, 200, 250, 300]
     max_depths = [5, 10, 25, 50]
     max_features = ['sqrt', 'log2']
-    trnX, tstX, trnY, tstY, labels = trainSplitTest(data, trainSize, className)
+    trnX, tstX, trnY, tstY = trainSplitTest(data, trainSize, className)
     plt.figure()
     fig, axs = plt.subplots(1, 2, figsize=(10, 4), squeeze=False)
     for k in range(len(max_features)):
@@ -119,6 +140,8 @@ def randomForests(data, trainSize, className):
                 rf = RandomForestClassifier(n_estimators=n, max_depth=d, max_features=f)
                 rf.fit(trnX, trnY)
                 prdY = rf.predict(tstX)
+                print("Model accuracy " + "%.3f" % d + "(" + "%.3f" % n + "): " + "%.3f" % metrics.accuracy_score(tstY,
+                                                                                                                  prdY))
                 yvalues.append(metrics.accuracy_score(tstY, prdY))
             values[d] = yvalues
         multiple_line_chart(axs[0, k], n_estimators, values, 'Random Forests with %s features' % f,

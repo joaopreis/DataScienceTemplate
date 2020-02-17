@@ -1,4 +1,4 @@
-import TrainingModels
+from TrainingModels import *
 from DataProfiling import *
 from Evaluation import *
 from DataPreparation import *
@@ -54,8 +54,8 @@ print(dataType(data))
 ##naiveBayes(data, 0.7, "Cover_Type", GaussianNB())
 ##accuracy(data, 0.9, "Cover_Type", GaussianNB)
 ##confusionMatrix(data, 0.8, "Cover_Type", GaussianNB())
-naiveBayesComparator(data, 0.70, "Cover_Type")
-##kNNComparator(sample, 0.7, "Cover_Type")
+##naiveBayesComparator(data, 0.70, "Cover_Type")
+kNNComparator(data, 0.7, "Cover_Type")
 ##decisionTrees(sample, 0.7, "Cover_Type")
 ##randomForests(sample, 0.7, "Cover_Type")
 ##rocChart(sample, 0.7, "Cover_Type", GaussianNB())
