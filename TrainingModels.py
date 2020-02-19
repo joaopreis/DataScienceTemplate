@@ -1,4 +1,4 @@
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB, BernoulliNB
@@ -115,7 +115,7 @@ def decisionTrees(data, trainSize, className):
 ##Tree PNG##
 def treePNG(data, trainSize, maxDepth, className):
     tree = DecisionTreeClassifier(max_depth=maxDepth)
-    trnX, tstX, trnY, tstY = trainSplitTest(data,trainSize,className)
+    trnX, tstX, trnY, tstY = trainSplitTest(data, trainSize, className)
     tree.fit(trnX, trnY)
     dot_data = export_graphviz(tree, out_file='dtree.dot', filled=True, rounded=True, special_characters=True)
     plt.figure(figsize=(14, 18))
@@ -150,3 +150,22 @@ def randomForests(data, trainSize, className):
                             'nr estimators',
                             'accuracy', percentage=True)
     plt.show()
+
+
+##Gradient Boosting##
+def gradient_boosting(data, trainsSize, className):
+    trnX, tstX, trnY, tstY = trainSplitTest(data, trainsSize, className)
+    learning_rates = [0.1, 0.25, 0.5, 0.75]
+    n_estimators = [2, 5, 10, 25, 50, 75, 100]
+    max_depths = [2, 5]
+    for l in learning_rates:
+        for n in n_estimators:
+            for m in max_depths:
+                gb = GradientBoostingClassifier(n_estimators=n, learning_rate=l, max_features=2,
+                                                max_depth=m, random_state=0)
+                gb.fit(trnX, trnY)
+                prdY = gb.predict(tstX)
+                print('Accuracy for %s [learning_rate] with %s [n_estimators] and %s [max_depths] = %.4f' % (l, n, m,
+                                                                                                             metrics.accuracy_score(
+                                                                                                                 tstY,
+                                                                                                                 prdY)))
